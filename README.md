@@ -1,5 +1,6 @@
 # vbcrypt
-A simple bcrypt Library for VLang.
+A simple bcrypt Library for VLang.  
+Porting from Golang( golang.org/x/crypto/bcrypt ).
 
 ## Installation
 ```
