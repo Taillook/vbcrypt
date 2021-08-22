@@ -9,7 +9,7 @@ v install Taillook.vbcrypt
 
 ## example
 ```v
-import vbcrypt
+import Taillook.vbcrypt
 
 fn main() {
 	hash := vbcrypt.generate_from_password('password'.bytes(), 10) or {
