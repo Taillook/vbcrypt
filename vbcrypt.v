@@ -4,7 +4,7 @@ import encoding.base64
 import rand
 import blowfish
 
-const (
+pub const (
 	min_cost              = 4
 	max_cost              = 31
 	default_cost          = 10
@@ -12,6 +12,7 @@ const (
 	max_crypted_hash_size = 23
 	encoded_salt_size     = 22
 	encoded_hash_size     = 31
+	min_hash_size         = 59
 
 	major_version         = '2'
 	minor_version         = 'a'
@@ -37,6 +38,24 @@ pub fn generate_from_password(password []byte, cost int) ?string {
 	return string(p.hash_byte())
 }
 
+pub fn compare_hash_and_password(password []byte, hashed_password []byte) ? {
+	mut p := new_from_hash(hashed_password) or { return error('Error: $err') }
+	p.salt << '=='.bytes()
+	other_hash := bcrypt(password, p.cost, p.salt) or { return error('err') }
+
+	mut other_p := Hashed{
+		hash: other_hash
+		salt: p.salt
+		cost: p.cost
+		major: p.major
+		minor: p.minor
+	}
+
+	if string(p.hash_byte()) != string(other_p.hash_byte()) {
+		return error('mismatched hash and password')
+	}
+}
+
 pub fn generate_salt() string {
 	salt_source := 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQLSTUVWXYZ0123456789'
 	return rand.string_from_set(salt_source, solt_length)
@@ -58,6 +77,25 @@ fn new_from_password(password []byte, mut cost &int) ?&Hashed {
 	p.salt = base64.encode(generate_salt().bytes()).bytes()
 	hash := bcrypt(password, p.cost, p.salt) or { return error('err') }
 	p.hash = hash
+	return &p
+}
+
+fn new_from_hash(hashed_secret []byte) ?&Hashed {
+	mut tmp := hashed_secret.clone()
+	if tmp.len < min_hash_size {
+		return error('hash to short')
+	}
+
+	mut p := Hashed{}
+	mut n := p.decode_version(tmp) or { return err }
+	tmp = tmp[n..]
+
+	n = p.decode_cost(tmp) or { return err }
+	tmp = tmp[n..]
+
+	p.salt = tmp[..encoded_salt_size].clone()
+	p.hash = tmp[encoded_salt_size..].clone()
+
 	return &p
 }
 
@@ -113,4 +151,33 @@ fn (mut h Hashed) hash_byte() []byte {
 	copy(arr[n..], h.hash)
 	n += encoded_hash_size
 	return arr[..n]
+}
+
+fn (mut h Hashed) decode_version(sbytes []byte) ?int {
+	if sbytes[0] != '$'.bytes()[0] {
+		return error('bcrypt hashes must start with \'$\'')
+	}
+	if sbytes[1] != major_version.bytes()[0] {
+		return error('bcrypt algorithm version $major_version')
+	}
+	h.major = sbytes[1].ascii_str()
+	mut n := 3
+	if sbytes[2] != '$'.bytes()[0] {
+		h.minor = sbytes[2].ascii_str()
+		n++
+	}
+	return n
+}
+
+fn (mut h Hashed) decode_cost(sbytes []byte) ?int {
+	cost := string(sbytes[0..2]).int()
+	check_cost(cost) or { return err }
+	h.cost = cost
+	return 3
+}
+
+fn check_cost(cost int) ? {
+	if cost < min_cost || cost > max_cost {
+		return error('invalid cost')
+	}
 }
