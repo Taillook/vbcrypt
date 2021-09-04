@@ -43,8 +43,8 @@ jobs:
     - name: Build vbcrypt
       run: |
         cd vbcrypt
-        ../v -prod .
-        ../v -autofree .
+        ../v -shared -prod .
+        ../v -shared -autofree .
   macos:
     runs-on: macos-10.15
     steps:
@@ -61,8 +61,7 @@ jobs:
     - name: Build vbcrypt
       run: |
         cd vbcrypt
-        ../v .
-        #v -prod .
+        ../v -shared -prod .
   windows:
     runs-on: windows-2019
     steps:
@@ -80,4 +79,4 @@ jobs:
     - name: Build vbcrypt
       run: |
         cd vbcrypt
-        ..\v.exe -prod .
+        ..\v.exe -shared -prod .
