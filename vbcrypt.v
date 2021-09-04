@@ -32,8 +32,7 @@ const magic_cipher_data = [byte(0x4f727068), 0x65616e42, 0x65686f6c, 0x64657253,
 ]
 
 pub fn generate_from_password(password []byte, cost int) ?string {
-	mut cost_ := cost
-	mut p := new_from_password(password, mut cost_) or { return error('Error: $err') }
+	mut p := new_from_password(password, cost) or { return error('Error: $err') }
 
 	return string(p.hash_byte())
 }
@@ -58,21 +57,22 @@ pub fn compare_hash_and_password(password []byte, hashed_password []byte) ? {
 
 pub fn generate_salt() string {
 	salt_source := 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQLSTUVWXYZ0123456789'
-	return rand.string_from_set(salt_source, solt_length)
+	return rand.string_from_set(salt_source, vbcrypt.solt_length)
 }
 
-fn new_from_password(password []byte, mut cost &int) ?&Hashed {
-	if cost < min_cost {
-		cost = default_cost
+fn new_from_password(password []byte, cost int) ?&Hashed {
+	mut cost_ := cost
+	if cost < vbcrypt.min_cost {
+		cost_ = vbcrypt.default_cost
 	}
 	mut p := Hashed{}
-	p.major = major_version
-	p.minor = minor_version
+	p.major = vbcrypt.major_version
+	p.minor = vbcrypt.minor_version
 
-	if cost < min_cost || cost > max_cost {
+	if cost_ < vbcrypt.min_cost || cost_ > vbcrypt.max_cost {
 		return error('invalid cost')
 	}
-	p.cost = cost
+	p.cost = cost_
 
 	p.salt = base64.encode(generate_salt().bytes()).bytes()
 	hash := bcrypt(password, p.cost, p.salt) or { return error('err') }
@@ -82,7 +82,7 @@ fn new_from_password(password []byte, mut cost &int) ?&Hashed {
 
 fn new_from_hash(hashed_secret []byte) ?&Hashed {
 	mut tmp := hashed_secret.clone()
-	if tmp.len < min_hash_size {
+	if tmp.len < vbcrypt.min_hash_size {
 		return error('hash to short')
 	}
 
@@ -93,15 +93,15 @@ fn new_from_hash(hashed_secret []byte) ?&Hashed {
 	n = p.decode_cost(tmp) or { return err }
 	tmp = tmp[n..]
 
-	p.salt = tmp[..encoded_salt_size].clone()
-	p.hash = tmp[encoded_salt_size..].clone()
+	p.salt = tmp[..vbcrypt.encoded_salt_size].clone()
+	p.hash = tmp[vbcrypt.encoded_salt_size..].clone()
 
 	return &p
 }
 
 fn bcrypt(password []byte, cost int, salt []byte) ?[]byte {
-	mut cipher_data := []byte{len: 72 - magic_cipher_data.len, init: 0}
-	cipher_data << magic_cipher_data
+	mut cipher_data := []byte{len: 72 - vbcrypt.magic_cipher_data.len, init: 0}
+	cipher_data << vbcrypt.magic_cipher_data
 
 	mut bf := expensive_blowfish_setup(password, u32(cost), salt) or { return error('err') }
 
@@ -111,7 +111,7 @@ fn bcrypt(password []byte, cost int, salt []byte) ?[]byte {
 		}
 	}
 
-	hsh := base64.encode(cipher_data[..max_crypted_hash_size])
+	hsh := base64.encode(cipher_data[..vbcrypt.max_crypted_hash_size])
 	return hsh.bytes()
 }
 
@@ -147,18 +147,18 @@ fn (mut h Hashed) hash_byte() []byte {
 	arr[n] = '$'.bytes()[0]
 	n++
 	copy(arr[n..], h.salt)
-	n += encoded_salt_size
+	n += vbcrypt.encoded_salt_size
 	copy(arr[n..], h.hash)
-	n += encoded_hash_size
+	n += vbcrypt.encoded_hash_size
 	return arr[..n]
 }
 
 fn (mut h Hashed) decode_version(sbytes []byte) ?int {
 	if sbytes[0] != '$'.bytes()[0] {
-		return error('bcrypt hashes must start with \'$\'')
+		return error("bcrypt hashes must start with '$'")
 	}
-	if sbytes[1] != major_version.bytes()[0] {
-		return error('bcrypt algorithm version $major_version')
+	if sbytes[1] != vbcrypt.major_version.bytes()[0] {
+		return error('bcrypt algorithm version $vbcrypt.major_version')
 	}
 	h.major = sbytes[1].ascii_str()
 	mut n := 3
@@ -177,7 +177,7 @@ fn (mut h Hashed) decode_cost(sbytes []byte) ?int {
 }
 
 fn check_cost(cost int) ? {
-	if cost < min_cost || cost > max_cost {
+	if cost < vbcrypt.min_cost || cost > vbcrypt.max_cost {
 		return error('invalid cost')
 	}
 }

@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  code-formatting:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout V
+      uses: actions/checkout@v2
+      with:
+        repository: vlang/v
+    - name: Checkout vbcrypt
+      uses: actions/checkout@v2
+      with:
+        path: vbcrypt
+    - name: Build V
+      run: make
+    - name: v vet
+      run: ./v vet vbcrypt/
+    - name: v fmt -verify
+      run: ./v fmt -verify vbcrypt/
+
+  ubuntu:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout V
+      uses: actions/checkout@v2
+      with:
+        repository: vlang/v
+    - name: Checkout vbcrypt
+      uses: actions/checkout@v2
+      with:
+        path: vbcrypt
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install --quiet -y libfreetype6-dev libglfw3-dev libxi-dev libxcursor-dev
+    - name: Build V
+      run: make
+    - name: Build vbcrypt
+      run: |
+        cd vbcrypt
+        ../v -shared -prod .
+        ../v -shared -autofree .
+  macos:
+    runs-on: macos-10.15
+    steps:
+    - name: Checkout V
+      uses: actions/checkout@v2
+      with:
+        repository: vlang/v
+    - name: Checkout vbcrypt
+      uses: actions/checkout@v2
+      with:
+        path: vbcrypt
+    - name: Build V
+      run: make
+    - name: Build vbcrypt
+      run: |
+        cd vbcrypt
+        ../v -shared -prod .
+  windows:
+    runs-on: windows-2019
+    steps:
+    - name: Checkout V
+      uses: actions/checkout@v2
+      with:
+        repository: vlang/v
+    - name: Checkout vbcrypt
+      uses: actions/checkout@v2
+      with:
+        path: vbcrypt
+    - name: Build V
+      run: |
+        .\make.bat -gcc
+    - name: Build vbcrypt
+      run: |
+        cd vbcrypt
+        ..\v.exe -shared -prod .
