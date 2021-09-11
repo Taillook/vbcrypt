@@ -126,7 +126,7 @@ fn get_next_word(b []byte, pos &int) u32 {
 	mut w := u32(0)
 	mut j := 0
 	unsafe {
-		j = pos
+		j = *pos
 	}
 	for i := 0; i < 4; i++ {
 		w = w << 8 | u32(b[j])
