@@ -7,7 +7,7 @@ fn main() {
 		println(err)
 		return
 	}
-	println("hash: $hash")
+	println('hash: $hash')
 
 	vbcrypt.compare_hash_and_password('password'.bytes(), hash.bytes()) or {
 		println(err)
