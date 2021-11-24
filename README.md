@@ -1,5 +1,5 @@
 # vbcrypt
-A simple bcrypt Library for [V](https://github.com/vlang/v).  
+Using bcrypt for for [V](https://github.com/vlang/v).  
 Porting from Golang([golang.org/x/crypto/bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt)).
 
 ## Installation
