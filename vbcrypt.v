@@ -28,8 +28,7 @@ mut:
 }
 
 const magic_cipher_data = [byte(0x4f727068), 0x65616e42, 0x65686f6c, 0x64657253, 0x63727944,
-	0x6f756274,
-]
+	0x6f756274]
 
 pub fn generate_from_password(password []byte, cost int) ?string {
 	mut p := new_from_password(password, cost) or { return error('Error: $err') }
