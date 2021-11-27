@@ -1,6 +1,6 @@
 module main
 
-import taillook.vbcrypt
+import example.vbcrypt
 
 fn main() {
 	hash := vbcrypt.generate_from_password('password'.bytes(), 10) or {

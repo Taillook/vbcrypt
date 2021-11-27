@@ -115,7 +115,7 @@ fn bcrypt(password []byte, cost int, salt []byte) ?[]byte {
 }
 
 fn expensive_blowfish_setup(key []byte, cost u32, salt []byte) ?&blowfish.Blowfish {
-	csalt := base64.decode(string(salt))
+	csalt := base64.decode(salt.bytestr())
 
 	mut bf := blowfish.new_salted_cipher(key, csalt) or { return error('err') }
 
