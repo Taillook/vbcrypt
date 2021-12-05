@@ -1,3 +1,6 @@
+# Important!
+This project is ported in [vlib/crypto of vlang/v](https://github.com/vlang/v/tree/master/vlib/crypto).
+
 # vbcrypt
 Using bcrypt for for [V](https://github.com/vlang/v).  
 Porting from Golang([golang.org/x/crypto/bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt)).
